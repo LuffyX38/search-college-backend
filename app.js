@@ -15,6 +15,9 @@ app.use(
 
 app.use(cookieParser());
 
+app.get("/", (req, res) => {
+  res.send("Welcome to the College API");
+});
 
 const collegeList = require("./src/routes/CollegeList.route.js");
 app.use("/api/colleges", collegeList);
