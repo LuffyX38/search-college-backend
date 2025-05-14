@@ -1,5 +1,6 @@
 const College = require("../models/collegeList.model.js");
 const CollegeInfo = require("../models/individualCollegeInfo.model.js");
+const CollegeBucket = require("../models/collegeBucket.model.js");
 const asyncHandler = require("../utils/asyncHandler.js");
 const ApiResponse = require("../utils/ApiResponse.js");
 const ApiError = require("../utils/ApiError.js");
@@ -281,6 +282,129 @@ exports.getCollegeCountForSearch = asyncHandler(async (req, res) => {
         200,
         { total: count },
         `Total colleges with name ${name}: ${count}`
+      )
+    );
+});
+
+exports.collegeBucket = asyncHandler(async (req, res) => {
+  // const collegeId = req.params.collegeId;
+  const page = parseInt(req.query.page) || 0;
+  const limit = 20;
+  const skip = page * limit;
+  const colleges = await CollegeBucket.find({ userId: req.user._id })
+    .skip(skip)
+    .limit(limit);
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, colleges, "College bucket fetched successfully")
+    );
+});
+
+exports.addToCollegeBucket = asyncHandler(async (req, res) => {
+  const collegeId = req.params.collegeId;
+  const userId = req.user._id;
+
+  const college = await College.findById(collegeId);
+  if (!college) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, null, "College not found"));
+  }
+
+  const existingBucketItem = await CollegeBucket.findOne({
+    collegeId: collegeId,
+    userId: userId,
+  });
+
+  if (existingBucketItem) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(400, existingBucketItem, "College already in bucket")
+      );
+  }
+  const newBucketItem = await CollegeBucket.create({
+    collegeId: collegeId,
+    userId: userId,
+    name: college.name,
+  });
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        newBucketItem,
+        "College added to bucket successfully"
+      )
+    );
+});
+
+// exports.getCollegeCourses = asyncHandler(async (req, res) => {
+
+//   // const collegeInfo = await CollegeInfo.find({});
+//   const colleges = await College.find({});
+
+//   res.status(200).json(
+//     new ApiResponse(200, colleges, `Total colleges: ${colleges.length}`)
+//   );
+
+// });
+
+exports.getCourses = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 0;
+  const limit = 30;
+
+  const skip = page * limit;
+
+  const courses = await CollegeInfo.aggregate([
+    { $unwind: "$courses" },
+    {
+      $group: {
+        _id: "$courses",
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { count: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+  ]);
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, courses, `Total courses: ${courses.length}`));
+});
+
+exports.getSpecificCourseColleges = asyncHandler(async (req, res) => {
+  const courseName = req.params.courseName;
+  const page = parseInt(req.query.page) || 0;
+  const limit = 20;
+  const skip = page * limit;
+
+  const colleges = await CollegeInfo.find(
+    {
+      courses: courseName,
+    },
+    {
+      name: 1,
+      location: 1,
+      collegeId: 1,
+      _id: 0,
+    }
+  )
+    .skip(skip)
+    .limit(limit);
+
+  // console.log(colleges);
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        colleges,
+        `Total colleges offering ${courseName}: ${colleges.length}`
       )
     );
 });
