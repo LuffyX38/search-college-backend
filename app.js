@@ -8,9 +8,9 @@ const cookieParser = require("cookie-parser");
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: "https://search-college-in.netlify.app",
     credentials: true,
-    secure: true
+    secure: true,
   })
 );
 
