@@ -19,3 +19,4 @@ route.delete("/addToBucket/remove/:itemId", auth.verifyJWT, collegeController.re
 route.get("/addToBucket/checkCollege/:collegeId", auth.verifyJWT, collegeController.checkIfItsInBucketOrNot);
 
 module.exports = route;
+//
