@@ -15,5 +15,7 @@ route.get("/courses/courseName/:courseName", collegeController.getSpecificCourse
 
 route.get("/addToBucket/view", auth.verifyJWT, collegeController.collegeBucket);
 route.post("/addToBucket/id/:collegeId", auth.verifyJWT, collegeController.addToCollegeBucket);
+route.delete("/addToBucket/remove/:itemId", auth.verifyJWT, collegeController.removeFromCollegeBucket);
+route.get("/addToBucket/checkCollege/:collegeId", auth.verifyJWT, collegeController.checkIfItsInBucketOrNot);
 
 module.exports = route;

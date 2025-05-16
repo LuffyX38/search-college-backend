@@ -292,6 +292,7 @@ exports.collegeBucket = asyncHandler(async (req, res) => {
   const limit = 20;
   const skip = page * limit;
   const colleges = await CollegeBucket.find({ userId: req.user._id })
+    .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
 
@@ -408,3 +409,44 @@ exports.getSpecificCourseColleges = asyncHandler(async (req, res) => {
       )
     );
 });
+
+exports.removeFromCollegeBucket = asyncHandler(async (req, res) => { 
+
+  const itemId = req.params.itemId;
+
+  const deletedItem = await CollegeBucket.findByIdAndDelete(itemId);
+  if (!deletedItem) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, null, "Item not found in bucket"));
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, deletedItem, "Item removed from bucket"));
+
+});
+
+exports.checkIfItsInBucketOrNot = asyncHandler(async (req, res) => {
+
+  const collegeId = req.params.collegeId;
+  const userId = req.user._id;
+
+  const existingBucketItem = await CollegeBucket.findOne({
+    collegeId: collegeId,
+    userId: userId,
+  });
+
+  if (existingBucketItem) {
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, {inBucket: true}, "College already in bucket")
+      );
+  }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {inBucket: false}, "College not in bucket"));
+  
+
+ });
